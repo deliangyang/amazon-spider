@@ -1,0 +1,21 @@
+{
+    "name": "root/amazon-spider",
+    "description": "amazon spider",
+    "authors": [
+        {
+            "name": "phantom",
+            "email": "2411125253@qq.com"
+        }
+    ],
+    "require": {
+        "guzzlehttp/guzzle": "^6.3",
+        "symfony/dom-crawler": "^3.4",
+        "symfony/css-selector": "^3.4",
+        "phpoffice/phpexcel": "^1.8"
+    },
+    "autoload": {
+        "psr-4": {
+            "AmazonSpider\\":"src/"
+        }
+    }
+}
