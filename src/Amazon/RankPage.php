@@ -104,10 +104,11 @@ class RankPage extends BaseHttp
         $data = explode("\n", $content);
         $values = [];
         foreach ($data as $jj) {
-            if (empty(str_replace([' ', "\n"], '', $jj))) {
+            $jj = str_replace([' ', "\n"], '', $jj);
+            if (empty($jj)) {
                 continue;
             }
-            $values[] = trim($jj);
+            $values[] = $jj;
         }
         list($name, $value) = $values;
         if (preg_match('#ASIN#i', $name)) {
