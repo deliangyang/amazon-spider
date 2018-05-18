@@ -35,7 +35,7 @@ class RankPage extends BaseHttp
                     $price = $nextCrawl->filterXPath('//span[@class="p13n-sc-price"]')->text();
                     $img = $nextCrawl->filterXPath('//img')->extract(['src']);
                     $url = $nextCrawl->filterXPath('//a[@class="a-link-normal"]')->extract(['href']);
-                    $text = $nextCrawl->filterXPath('//a[@class="a-size-small a-link-normal"]')->text();
+                    $review = $nextCrawl->filterXPath('//a[@class="a-size-small a-link-normal"]')->text();
                     $data = [
                         'rank' => str_replace('.', '', trim($rank)),
                         'title' => trim($title),
@@ -43,7 +43,7 @@ class RankPage extends BaseHttp
                         'price' => $price,
                         'image' => $img[0],
                         'url' => 'https://www.amazon.com' . $url[0],
-                        'text' => $text,
+                        'review' => $review,
                     ];
                     echo 'url:', $data['url'], PHP_EOL;
                     yield $data;
@@ -120,8 +120,39 @@ class RankPage extends BaseHttp
     }
 
     protected $defaultMeta = [
+        'rank' => '',
+        'title' => '',
+        'star' => '',
+        'price' => '',
+        'image' => '',
+        'url' => '',
+        'review' => '',
+        'category' => '',
         'asin' => '',
         'date' => '',
-        'category' => '',
     ];
+
+    /**
+     * 获取详情页的信息
+     *
+     * @param $url
+     * @param array $item
+     * @return array
+     */
+    public function detailPage($url, array $item = [])
+    {
+        $crawl = $this->getHtmlDom($url);
+        if ($crawl) {
+            $category = $crawl->filterXPath('//div[@id="wayfinding-breadcrumbs_feature_div"]')->text();
+            $category = (str_replace([' ', "\n"], '', $category));
+            $item['category'] = str_replace('›', ' › ', $category);
+
+            $attributes = $crawl->filterXPath('//table[@id="productDetails_detailBullets_sections1"]/tr');
+            foreach ($attributes as $attribute) {
+                $this->parseAttributes($attribute->textContent, $item);
+            }
+        }
+
+        return $item + $this->defaultMeta;
+    }
 }

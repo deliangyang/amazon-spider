@@ -9,6 +9,7 @@
 namespace AmazonSpider\Amazon;
 
 use GuzzleHttp\Client;
+use Symfony\Component\DomCrawler\Crawler;
 
 abstract class BaseHttp
 {
@@ -32,5 +33,19 @@ abstract class BaseHttp
     }
 
     abstract public function execute();
+
+    public function getHtmlDom($url)
+    {
+        try {
+            $req = $this->client->get($url);
+            $content = $req->getBody()->getContents();
+            file_put_contents(__DIR__ . '/../../config/test.html', $content);
+            $crawl = new Crawler($content);
+            return $crawl;
+        } catch (\Exception $ex) {
+
+        }
+        return false;
+    }
 
 }
