@@ -12,7 +12,7 @@ use Symfony\Component\DomCrawler\Crawler;
 class EachRankingPage extends BaseHttp
 {
 
-    protected $ref = 'ref=zg_bs_pg_%s?_encoding=UTF8&pg=%s&ajax=1';
+    protected $ref = 'ref=zg_bs_pg_%s?_encoding=UTF8&pg=%s';
 
     protected $totalPage = 2;
 
@@ -29,8 +29,6 @@ class EachRankingPage extends BaseHttp
     {
         foreach ($this->parsePages() as $k => $pageUrl) {
             $items = $this->getPageItems($pageUrl);
-            break;
-            var_dump($items);
             foreach ($items as $key => $item) {
                 $item = $this->detailPage($item);
                 var_dump($item);
@@ -47,14 +45,26 @@ class EachRankingPage extends BaseHttp
             $crawlNodes = $crawl->filter('div.zg_itemImmersion');
             echo '[+] count:', $crawlNodes->count(), PHP_EOL;
 
+            if ($crawlNodes->count() == 0) {
+                return $this->thePage($crawl);
+            }
+
             foreach ($crawlNodes as $crawl) {
                 $node = new Crawler($crawl);
                 $rank = $node->filter('span.zg_rankNumber')->text();
-                $title = $node->filter('div.p13n-sc-truncate.p13n-sc-line-clamp-2')->text();
+                $title = $node->filter('div.zg_itemWrapper div.p13n-sc-truncate')->text();
                 $star = $node->filter('span.a-icon-alt')->text();
-                $urlDom = $node->filter('a.a-size-small.a-link-normal');
-                $url = $urlDom->attr('href');
-                $review = $urlDom->text();
+                $urlDom = $node->filter('a.a-size-small');
+                try {
+                    $url = $urlDom->attr('href');
+                    $review = $urlDom->text();
+                } catch (\Exception $ex) {
+                    $urlDom = $node->filter('a.a-link-normal')->first();
+                    $url = $urlDom->attr('href');
+                    $review = 0;
+                }
+//                $url = $urlDom->attr('href');
+//                $review = $urlDom->text();
                 $image = $node->filter('div.a-section.a-spacing-mini>img')->attr('src');
                 $price = $node->filter('span.p13n-sc-price')->text();
                 $data = [
@@ -66,7 +76,8 @@ class EachRankingPage extends BaseHttp
                     'url' => 'https://www.amazon.com' . $url,
                     'review' => $review,
                 ];
-                var_dump($data);
+                $this->updateOrCreate($data);
+                $allData[] = $data;
             }
 
         }
@@ -112,6 +123,7 @@ class EachRankingPage extends BaseHttp
         'category' => '',
         'asin' => '',
         'date' => '',
+        'md5_url' => '',
     ];
 
     /**
@@ -134,14 +146,18 @@ class EachRankingPage extends BaseHttp
             }
         }
 
-        return $item + $this->defaultMeta;
+        $data = $item + $this->defaultMeta;
+        $this->saveExtra($data);
+        return $data;
     }
 
     public function thePage(Crawler $crawl)
     {
-        $eachItems = $crawl->filter('#zg-ordered-list li.zg-item-immersion');
+        $eachItems = $crawl->filter('ol#zg-ordered-list li.zg-item-immersion');
         echo '[+] count:', $eachItems->count(), PHP_EOL;
+        $allData = [];
         foreach ($eachItems as $node) {
+            $node = new Crawler($node);
             try {
                 $rank = $node->filter('span.zg-badge-text')->text();
                 $title = $node->filter('div.p13n-sc-truncate.p13n-sc-line-clamp-2')->text();
@@ -160,12 +176,15 @@ class EachRankingPage extends BaseHttp
                     'url' => 'https://www.amazon.com' . $url,
                     'review' => $review,
                 ];
+                $this->updateOrCreate($data);
                 var_dump($data);
                 $allData[] = $data;
-                return $data;
+                #return $data;
             } catch (\Exception $ex) {
                 var_dump([$ex->getMessage(), $ex->getLine(), $ex->getCode()]);
             }
         }
+
+        return $allData;
     }
 }

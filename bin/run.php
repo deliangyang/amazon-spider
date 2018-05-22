@@ -8,6 +8,6 @@
 require_once __DIR__ . '/../vendor/autoload.php';
 
 echo 'start...', PHP_EOL;
-$page = new \AmazonSpider\Amazon\RankPage();
+$page = new \AmazonSpider\Amazon\EachRankingPage();
 $page->execute();
 echo 'end...', PHP_EOL;
