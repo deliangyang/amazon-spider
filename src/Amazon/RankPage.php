@@ -13,19 +13,36 @@ use Symfony\Component\DomCrawler\Crawler;
 class RankPage extends BaseHttp
 {
 
+    protected $category;
+
     protected $url = 'https://www.amazon.com/Best-Sellers-Home-Kitchen/zgbs/home-garden/ref=zg_bs_pg_%s?_encoding=UTF8&pg=%s&ajax=1';
+
+    public function __construct($url = '', $category = '')
+    {
+        parent::__construct();
+
+        if ($url) {
+            $this->url = $url;
+        }
+        $this->category = $category ?: date('Y-m-d_H:i:s');
+    }
 
     public function getRanks()
     {
         for ($i = 1; $i <= 5; $i++) {
-            $url = sprintf($this->url, $i, $i);
-            echo $url, PHP_EOL;
-            $req = $this->client->get($url);
-            $content = $req->getBody()->getContents();
+            try {
+                $url = sprintf($this->url, $i, $i);
+                echo $url, PHP_EOL;
+                $req = $this->client->get($url);
+                $content = $req->getBody()->getContents();
 
-            $crawl = new Crawler();
-            $crawl->addHtmlContent($content);
-            $nodes = $crawl->filterXPath('//div[@class="zg_itemImmersion"]');
+                $crawl = new Crawler();
+                $crawl->addHtmlContent($content);
+                $nodes = $crawl->filterXPath('//div[@class="zg_itemImmersion"]');
+            } catch (\Exception $ex) {
+                echo $ex->getMessage(), PHP_EOL;
+                continue;
+            }
             foreach ($nodes as $key => $node) {
                 try {
                     $nextCrawl = new Crawler($node);
@@ -44,7 +61,12 @@ class RankPage extends BaseHttp
                         'image' => $img[0],
                         'url' => 'https://www.amazon.com' . $url[0],
                         'text' => $text,
+                        'prime' => '',
                     ];
+
+                    if (preg_match('#Prime#i', $node->textContent)) {
+                        $data['prime'] = 'Prime';
+                    }
                     echo 'url:', $data['url'], PHP_EOL;
                     yield $data;
                 } catch (\Exception $ex) {
@@ -58,8 +80,8 @@ class RankPage extends BaseHttp
     {
         $excel = new \PHPExcel();
         $excel->setActiveSheetIndex(0);
-        $letter = array('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J');
-        $tableHeader = array('排名', '名称', '评分', '价格', '图片', '链接', '评论', '分类', 'ASIN', 'Date');
+        $letter = array('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K');
+        $tableHeader = array('排名', '名称', '评分', '价格', '图片', '链接', '评论', 'prime', '分类', 'ASIN', 'Date');
         $len = count($tableHeader);
         for ($i = 0; $i < $len; $i++) {
             $excel->getActiveSheet()->setCellValue($letter[$i] . 1, $tableHeader[$i]);
@@ -95,7 +117,7 @@ class RankPage extends BaseHttp
         }
 
         $write = new \PHPExcel_Writer_Excel5($excel);
-        $write->save(__DIR__ . '/../../doc/' . date('Y-m-d_H:i:s') . '.xls');
+        $write->save(__DIR__ . '/../../doc/' . $this->category . '.xls');
 
     }
 
