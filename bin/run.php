@@ -11,7 +11,7 @@ $categories = require_once  __DIR__ . '/../config/categories.php';
 echo 'start...', PHP_EOL;
 foreach ($categories as $category) {
     try {
-        $page = new \AmazonSpider\Amazon\RankPage($category['url'], $category['name']);
+        $page = new \AmazonSpider\Amazon\RankPage(parsePages($category['url']), $category['name']);
         $page->execute();
         sleep(3);
     } catch (\Exception $ex) {
@@ -22,5 +22,12 @@ foreach ($categories as $category) {
 }
 
 echo 'end...', PHP_EOL;
+
+function parsePages($url)
+{
+    $urlPrefix = preg_replace('#ref=.+$#', '', $url);
+    $url = $urlPrefix . 'ref=zg_bs_pg_%s?_encoding=UTF8&pg=%s';
+    return $url;
+}
 
 
