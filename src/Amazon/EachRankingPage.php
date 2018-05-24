@@ -136,19 +136,24 @@ class EachRankingPage extends BaseHttp
     {
         $crawl = $this->getHtmlDom($item['url']);
         if ($crawl) {
-            $category = $crawl->filterXPath('//div[@id="wayfinding-breadcrumbs_feature_div"]')->text();
-            $category = (str_replace([' ', "\n"], '', $category));
-            $item['category'] = str_replace('›', ' › ', $category);
+            try {
+                $category = $crawl->filterXPath('//div[@id="wayfinding-breadcrumbs_feature_div"]')->text();
+                $category = (str_replace([' ', "\n"], '', $category));
+                $item['category'] = str_replace('›', ' › ', $category);
 
-            $attributes = $crawl->filterXPath('//table[@id="productDetails_detailBullets_sections1"]/tr');
-            foreach ($attributes as $attribute) {
-                $this->parseAttributes($attribute->textContent, $item);
+                $attributes = $crawl->filterXPath('//table[@id="productDetails_detailBullets_sections1"]/tr');
+                foreach ($attributes as $attribute) {
+                    $this->parseAttributes($attribute->textContent, $item);
+                }
+
+                $data = $item + $this->defaultMeta;
+                var_dump($data);
+                $this->saveExtra($data);
+                return $data;
+            } catch (\Exception $exception) {
+
             }
         }
-
-        $data = $item + $this->defaultMeta;
-        $this->saveExtra($data);
-        return $data;
     }
 
     public function thePage(Crawler $crawl)

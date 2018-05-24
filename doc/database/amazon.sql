@@ -18,3 +18,12 @@ CREATE TABLE `amazon` (
   UNIQUE KEY (`md5_url`),
   PRIMARY KEY (`id`)
 );
+
+
+create table `spider_results` (
+  `id` INT NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `user_id` INT NOT NULL  DEFAULT 0 COMMENT '用户编号',
+  `amount` DECIMAL(10, 7) NOT NULL  DEFAULT 0 COMMENT '金额',
+  `date` timestamp not null default current_timestamp,
+  PRIMARY KEY (`id`)
+)ENGINE=InnoDB DEFAULT CHARSET=utf8;
