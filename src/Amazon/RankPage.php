@@ -15,9 +15,11 @@ class RankPage extends BaseHttp
 
     protected $category;
 
+    protected $currentTime;
+
     protected $url = 'https://www.amazon.com/Best-Sellers-Home-Kitchen/zgbs/home-garden/ref=zg_bs_pg_%s?_encoding=UTF8&pg=%s&ajax=1';
 
-    public function __construct($url = '', $category = '')
+    public function __construct($url = '', $category = '', $currentTime = '')
     {
         parent::__construct();
 
@@ -25,6 +27,11 @@ class RankPage extends BaseHttp
             $this->url = $url;
         }
         $this->category = $category ?: date('Y-m-d_H:i:s');
+        if (empty($currentTime)) {
+            $this->currentTime = date('YmdHis');
+        } else {
+            $this->currentTime = $currentTime;
+        }
     }
 
     public function getRanks()
@@ -33,6 +40,7 @@ class RankPage extends BaseHttp
             try {
                 $url = sprintf($this->url, $i, $i);
                 echo $url, PHP_EOL;
+
                 $req = $this->client->get($url);
                 $content = $req->getBody()->getContents();
 
@@ -117,7 +125,9 @@ class RankPage extends BaseHttp
         }
 
         $write = new \PHPExcel_Writer_Excel5($excel);
-        $write->save(__DIR__ . '/../../doc/' . $this->category . '.xls');
+        $dir = __DIR__ . '/../../doc/' . $this->currentTime . '/';
+        @mkdir($dir, 0777, true);
+        $write->save($dir . $this->category . '.xls');
 
     }
 
