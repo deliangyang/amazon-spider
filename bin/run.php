@@ -6,17 +6,22 @@
  * Time: 10:58 PM
  */
 require_once __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/FileIterator.php';
 
 $dbConfig = require_once __DIR__ . '/../config/database.php';
 $db = new mysqli($dbConfig['host'], $dbConfig['username'], $dbConfig['password'], $dbConfig['database']);
 $db->set_charset($dbConfig['charset']);
 
-$categories = require_once  __DIR__ . '/../config/categories.php';
+//$categories = require_once  __DIR__ . '/../config/categories.php';
 $time = date('YmdHis');
 echo 'start...', PHP_EOL;
-foreach ($categories as $category) {
+
+$fileIterator = new FileIterator(__DIR__ . '/../config/new_categories');
+
+foreach ($fileIterator as $index => $line) {
+    list($category, $url) = explode('####', $line);
     try {
-        $page = new \AmazonSpider\Amazon\RankPage(parsePages($category['url']), $category['name'], $time);
+        $page = new \AmazonSpider\Amazon\RankPage(parsePages($url), $category, $time);
         $page->execute();
         sleep(3);
     } catch (\Exception $ex) {
@@ -27,10 +32,6 @@ foreach ($categories as $category) {
 }
 
 echo 'end...', PHP_EOL;
-
-echo 'do export...', PHP_EOL;
-
-require_once 'run.php';
 
 function parsePages($url)
 {

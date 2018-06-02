@@ -11,6 +11,10 @@ $dbConfig = require_once __DIR__ . '/../config/database.php';
 $db = new mysqli($dbConfig['host'], $dbConfig['username'], $dbConfig['password'], $dbConfig['database']);
 $db->set_charset($dbConfig['charset']);
 
+$cacheMethod = \PHPExcel_CachedObjectStorageFactory:: cache_to_phpTemp;
+$cacheSettings = array( ' memoryCacheSize '  => '80MB');
+\PHPExcel_Settings::setCacheStorageMethod($cacheMethod, $cacheSettings);
+
 $excel = new \PHPExcel();
 $excel->setActiveSheetIndex(0);
 $letter = array('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I');
